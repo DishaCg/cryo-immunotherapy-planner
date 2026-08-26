@@ -39,13 +39,13 @@ axisymmetric grid, implicit finite-volume, with latent heat handled
 through an enthalpy method. It passes a small regression suite (the
 ice ball has to grow monotonically, the lethal isotherm has to stay
 inside the visible one, two probes have to do better than one) and
-it's in the right ballpark against published Galil IceRod numbers --
+it's in the right ballpark against published Galil IceRod numbers -
 not exact, and I've written up exactly where the gap is and my best
 guess at why in CALIBRATION_NOTES.md.
 
 **Immune model.** I initially wanted to train something on real
 outcome data, but that data doesn't really exist publicly at the
-granularity you'd need -- studies report trial-level response rates,
+granularity you'd need - studies report trial-level response rates,
 not per-case freeze-parameter-to-immune-marker pairs. So instead this
 is a scoring function where every factor's weight comes from a
 specific paper or mechanism, and the output always comes with an
@@ -54,7 +54,7 @@ it is.
 
 **Optimizer.** Runs both modules across a set of candidate protocols
 and returns the Pareto front instead of mashing the two scores
-together into one fake "best" number -- a physics prediction and a
+together into one fake "best" number - a physics prediction and a
 literature guess aren't the same kind of evidence and I didn't want to
 hide that.
 
@@ -79,5 +79,5 @@ for e in results:
 
 Each protocol evaluation takes 10-15 seconds because of the solver, so
 a full grid search isn't fast. Fine for testing a handful of protocols
-offline, not fine for an interactive tool yet -- that'd need a faster
+offline, not fine for an interactive tool yet - that'd need a faster
 or cached solver mode first.
