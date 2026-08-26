@@ -44,7 +44,7 @@ Two more things helped close the gap:
 - I also tried turning perfusion off entirely, on the theory that
   manufacturer specs are usually measured on gel phantoms with no
   blood flow, not real perfused tissue. That made a bigger difference
-  than the double-freeze test -- gel-mode prediction landed at 30.6mm
+  than the double-freeze test - gel-mode prediction landed at 30.6mm
   vs. the 40mm benchmark, noticeably closer than the perfused in-vivo
   number (25.6mm).
 
