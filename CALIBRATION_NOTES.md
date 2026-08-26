@@ -38,7 +38,7 @@ Two more things helped close the gap:
   dependent instead of fixed. Picked up another ~20% or so.
 - I tested a double freeze-thaw-freeze cycle since that's the real
   clinical protocol, expecting it to close a lot of the remaining gap.
-  It barely mattered -- final radius came out almost the same as a
+  It barely mattered - final radius came out almost the same as a
   single freeze. Worth recording as a negative result even though it
   didn't help.
 - I also tried turning perfusion off entirely, on the theory that
