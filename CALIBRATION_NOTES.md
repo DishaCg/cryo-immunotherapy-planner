@@ -56,7 +56,7 @@ Two more things helped close the gap:
 | lethal-zone diameter | 13.2mm | 27mm | ~51% low |
 
 So: right order of magnitude, right shape of growth curve, lethal zone
-correctly nested inside the visible ice ball -- but not dialed in
+correctly nested inside the visible ice ball - but not dialed in
 exactly, especially the lethal zone. My best guess is that either my
 -40C cutoff for "lethal" is stricter than whatever criterion the
 manufacturer numbers are actually built on, or the generic tissue
