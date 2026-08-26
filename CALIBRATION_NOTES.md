@@ -1,4 +1,4 @@
-# Module A calibration — notes
+# Module A calibration - notes
 
 Before trusting any numbers out of the geometry model, I checked it
 against published data. Here's what I used and what I found.
@@ -17,7 +17,7 @@ against published data. Here's what I used and what I found.
 ## What I tried, in order
 
 My first version used a point-source probe and an explicit
-finite-difference solver, and it was badly wrong -- the ice ball
+finite-difference solver, and it was badly wrong - the ice ball
 basically stalled after a couple of minutes instead of growing. Two
 things were going on: real cryoprobes have an active freezing zone
 about 15-20mm long, not a single point, so a point source massively
@@ -28,7 +28,7 @@ got stuck.
 
 Fixing the probe geometry (giving it a proper 17mm active length) and
 switching to an implicit finite-volume solver got growth behaving
-correctly -- no more stalling, and the size roughly doubled. Still
+correctly - no more stalling, and the size roughly doubled. Still
 short of the benchmark though.
 
 Two more things helped close the gap:
