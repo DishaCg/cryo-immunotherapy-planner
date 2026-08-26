@@ -1,56 +1,66 @@
-# Module A — Calibration Notes (v1)
+# Module A calibration — notes
 
-This documents a calibration pass of the geometry model against
-**published, citable benchmark data**, done before any external
-outreach — per the reasoning that a model with no connection to real
-data isn't ready to show a potential collaborator.
+Before trusting any numbers out of the geometry model, I checked it
+against published data. Here's what I used and what I found.
 
-## Benchmark data used (all public, no patient data required)
+## What I compared against
 
-- Galil IceRod cryoprobe (17G, single probe, standard clinical
-  protocol): published ice-ball short diameter = 40mm, corresponding
-  lethal-zone short diameter = 27mm.
-  Source: Oncohema Key, *Cryoablation: Mechanism of Action and Devices*.
-- General principle: cytotoxic temperatures (−20 to −40°C) occur
-  3–5mm behind the visualized 0°C ice margin.
-  Source: ClinicalTrials.gov protocol documents (NCT01853618, NCT02821754).
-- Manufacturer bench guideline: single-probe ice-ball maximum
-  dimension range 3.7–5.3cm.
-  Source: PMC10289866 (Visual Ice / Boston Scientific system study).
+- Galil IceRod probe (17G, single probe, standard protocol): published
+  ice-ball short diameter of 40mm, lethal-zone short diameter of 27mm
+  (from Oncohema Key's cryoablation device overview).
+- The general rule that cytotoxic temperature (-20 to -40C) shows up
+  roughly 3-5mm behind the visible 0C margin (from ClinicalTrials.gov
+  protocol docs, NCT01853618 and NCT02821754).
+- Boston Scientific's Visual Ice bench guideline: single-probe ice
+  balls between 3.7 and 5.3cm max diameter (PMC10289866).
 
-## Calibration steps taken, in order, with reasoning
+## What I tried, in order
 
-| # | Change | Why | Effect |
-|---|--------|-----|--------|
-| 1 | Elongated probe active-freeze zone (17mm) instead of point sink | Commercial cryoprobes have an active freezing section, not a point tip; point-sink drastically under-predicts total heat extraction | Iceball radius roughly doubled |
-| 2 | Switched explicit FDM → implicit finite-volume solver | Explicit scheme was numerically stiff at the latent-heat front and stalled growth (~3x under-prediction) | Growth curve became physically sensible (no stalling) |
-| 3 | Temperature-dependent frozen thermal conductivity (ice conductivity genuinely increases at colder sub-zero temps, not constant) | Physical property, not a tuning knob — supported by ice thermal-conductivity literature (e.g. Slack 1980) | Closed roughly another 20% of the gap |
-| 4 | Tested double freeze-thaw-freeze protocol (matches standard clinical practice) vs. single freeze | Manufacturer specs are usually quoted for the standard two-cycle protocol | Negligible effect in this model — useful negative finding, not the source of the gap |
-| 5 | Tested no-perfusion ("gel phantom") vs. in-vivo perfused tissue | Manufacturer bench specs are typically measured in gel/agar phantoms with no blood flow, not perfused tissue | Gel-phantom prediction (30.6mm) tracks much closer to the 40mm bench spec than the perfused in-vivo prediction (25.6mm) — consistent with the literature distinction between bench and in-vivo ice-ball size |
+My first version used a point-source probe and an explicit
+finite-difference solver, and it was badly wrong -- the ice ball
+basically stalled after a couple of minutes instead of growing. Two
+things were going on: real cryoprobes have an active freezing zone
+about 15-20mm long, not a single point, so a point source massively
+underestimates how much heat they can pull out. And the explicit
+solver couldn't handle the stiff latent-heat term near the freezing
+front without a wildly small time step, so on a normal grid it just
+got stuck.
 
-## Current state (v1)
+Fixing the probe geometry (giving it a proper 17mm active length) and
+switching to an implicit finite-volume solver got growth behaving
+correctly -- no more stalling, and the size roughly doubled. Still
+short of the benchmark though.
 
-| Quantity | Model (gel-phantom mode) | Published benchmark | Gap |
+Two more things helped close the gap:
+
+- Ice conductivity actually goes up as it gets colder (it's not
+  constant), so I made frozen-tissue conductivity temperature
+  dependent instead of fixed. Picked up another ~20% or so.
+- I tested a double freeze-thaw-freeze cycle since that's the real
+  clinical protocol, expecting it to close a lot of the remaining gap.
+  It barely mattered -- final radius came out almost the same as a
+  single freeze. Worth recording as a negative result even though it
+  didn't help.
+- I also tried turning perfusion off entirely, on the theory that
+  manufacturer specs are usually measured on gel phantoms with no
+  blood flow, not real perfused tissue. That made a bigger difference
+  than the double-freeze test -- gel-mode prediction landed at 30.6mm
+  vs. the 40mm benchmark, noticeably closer than the perfused in-vivo
+  number (25.6mm).
+
+## Where it stands right now
+
+| | model (gel-phantom mode) | published | gap |
 |---|---|---|---|
-| Ice-ball diameter, single probe, 10 min | 30.6mm | 40mm (IceRod) | ~24% low |
-| Lethal-zone diameter | 13.2mm | 27mm (IceRod) | ~51% low |
+| ice-ball diameter, 10 min, single probe | 30.6mm | 40mm | ~24% low |
+| lethal-zone diameter | 13.2mm | 27mm | ~51% low |
 
-**Order of magnitude: correct. Absolute calibration: not yet exact.**
-The remaining gap is most likely in: (a) the −40°C lethal-isotherm
-threshold possibly being stricter than the criterion implicit in the
-manufacturer's "lethal zone" figure, and (b) generic (non-probe-
-specific) tissue property assumptions. This is exactly the kind of
-gap that real cryoablation modeling papers close using their own
-bench/gel experiments — which is a legitimate, honest thing to name
-explicitly as a next step rather than something to hide.
-
-## Why this matters for outreach
-
-This is no longer "an idea with no connection to reality." It's a
-working model that has been checked against real published numbers,
-found to be directionally and qualitatively correct, and has an
-identified, specific, well-reasoned remaining calibration gap. That
-last part is actually useful in an email to a potential advisor — it
-gives them a concrete, bounded, collaborative next step (e.g., "would
-your lab have access to gel-phantom or clinical ice-ball measurements
-I could calibrate against?") rather than an open-ended ask.
+So: right order of magnitude, right shape of growth curve, lethal zone
+correctly nested inside the visible ice ball -- but not dialed in
+exactly, especially the lethal zone. My best guess is that either my
+-40C cutoff for "lethal" is stricter than whatever criterion the
+manufacturer numbers are actually built on, or the generic tissue
+properties I'm using are off for whatever tissue their bench test
+used. Actually pinning that down would need real gel-phantom or
+clinical ice-ball measurements to fit against, which I don't have
+access to right now.

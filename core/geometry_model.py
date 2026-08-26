@@ -1,41 +1,34 @@
 """
-Module A: Ice-ball / lethal-isotherm geometry prediction.
+Module A: ice-ball / lethal-isotherm geometry prediction.
 
-Physics: axisymmetric (r, z) Pennes bioheat equation with an enthalpy
-(apparent heat capacity) treatment of latent heat, solved with an
-implicit (semi-implicit / linearized backward-Euler) finite-volume
-method.
+Solves the axisymmetric (r, z) Pennes bioheat equation, using an
+enthalpy (apparent heat capacity) treatment of latent heat, with an
+implicit finite-volume scheme:
 
     rho * c_eff(T) * dT/dt = div(k(T) grad T)
                               - w_b(T) * rho_b * c_b * (T - T_arterial)
                               + Q_metabolic
 
-Why implicit finite-volume, not explicit finite-difference:
-An earlier explicit-FDM version of this model was tried first and
-under-predicted ice-ball growth by roughly 3x compared to published
-cryoablation benchmarks. The cause: latent heat concentrated in a
-narrow (~7 C) "mushy zone" creates a huge, sharply localized apparent
-heat capacity, which makes the PDE numerically stiff right at the
-phase-change front. An explicit scheme forces an artificially tiny,
-stability-limited time step and the front effectively stalls on a
-coarse grid. Implicit time-stepping removes the stability restriction
-on the diffusion term, and cell-centered finite-volume discretization
-handles the r=0 axis naturally (no special-case L'Hopital limit
-needed) and conserves energy exactly by construction. This is the
-standard combination used in serious bioheat/cryoablation modeling
-literature for exactly this reason.
+Why implicit finite-volume: latent heat is concentrated in a narrow
+(~7C) mushy zone, which makes the apparent heat capacity spike sharply
+right at the freezing front. That makes the PDE stiff there, and an
+explicit scheme needs an impractically small time step to stay stable
+-- on a normal grid this basically shows up as the ice front stalling
+instead of growing. Implicit time-stepping gets rid of that
+restriction. Cell-centered finite volumes were the natural choice on
+top of that since they handle r=0 without any special-casing and
+conserve energy exactly.
 
-Two isotherms are tracked at the probe's active-zone mid-plane:
-  - 0 C   : onset of freezing (visible "ice ball" boundary on imaging)
-  - -40 C : the "lethal isotherm" -- reliably associated with complete
-            tumor cell death in the cryoablation literature, and the
-            one that actually matters for margin planning.
+Two isotherms get tracked at the probe's mid-plane:
+  - 0C   : the ice-ball boundary you'd actually see on imaging
+  - -40C : the "lethal" isotherm, i.e. the temperature associated with
+           complete tumor cell death, which is what actually matters
+           for margin planning
 
-This remains a research-prototype solver: a validated, inspectable,
-extensible starting point -- not a substitute for the FEM tools used
-in clinical planning software, and not yet calibrated against gel-
-phantom or clinical ground truth (see Section 8 of the project
-proposal for the intended validation step).
+Passes the regression tests in tests/test_geometry_model.py and is in
+the right order of magnitude against published single-probe benchmark
+data -- see CALIBRATION_NOTES.md for the full comparison. Not yet
+fitted to gel-phantom or clinical measurements.
 """
 
 from dataclasses import dataclass

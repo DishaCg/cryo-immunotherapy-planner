@@ -1,21 +1,22 @@
 """
 Integration layer: joint protocol optimizer.
 
-This is the actual novel contribution described in the proposal --
-existing tools optimize freeze protocols for geometric tumor coverage
-ONLY (Module A's job alone). This layer searches candidate protocols
-and surfaces the trade-off between:
+This module implements the core novel contribution of the associated
+proposal. Existing planning tools optimize freeze protocols for a
+single objective -- geometric tumor coverage (Module A's scope alone).
+This layer searches candidate protocols and evaluates the trade-off
+between:
   (a) ablation completeness/margin (from Module A, physics-grounded)
-  (b) predicted immune activation potential (from Module B, literature
-      heuristic -- see its explicit evidence-quality caveat)
+  (b) predicted immune activation potential (from Module B, a
+      literature-derived heuristic; see its evidence-quality label)
 
-It does NOT silently average these into one fake "optimal" number --
-that would hide a physics-grounded prediction and a heuristic
-estimate behind a single misleadingly authoritative score. Instead it
-returns the Pareto-efficient set: protocols where you cannot improve
-one objective without giving up the other. The clinician/researcher
-makes the actual trade-off call; the tool's job is to make that
-trade-off visible, not to make the decision for them.
+Rather than combining these into a single composite score -- which
+would obscure the difference in evidence basis between a
+physics-grounded prediction and a literature heuristic behind one
+number -- this module returns the Pareto-efficient set: protocols for
+which no improvement in one objective is possible without sacrificing
+the other. The trade-off is surfaced explicitly; the selection between
+Pareto-optimal candidates is left to clinical or research judgment.
 """
 
 from dataclasses import dataclass

@@ -1,28 +1,21 @@
 """
-Module B: Immune-response / immunogenicity potential estimator.
+Module B: immune-response / immunogenicity potential estimator.
 
-IMPORTANT SCOPING NOTE (read before trusting anything this module
-outputs): a proper supervised ML model needs a dataset of (freeze
-parameters) -> (measured immune outcome) pairs. That dataset does not
-exist in usable public form -- published cryo-immunotherapy studies
-report qualitative mechanisms and trial-level outcomes (response
-rates, survival), not per-case freeze-parameter-to-immune-marker
-tables. Building a "trained ML model" on top of that would mean
-either (a) fabricating a training set, which would produce a model
-that looks rigorous but isn't, or (b) training on an inappropriately
-tiny handful of data points and overstating what it learned.
+I originally wanted this to be a trained model, but there's no public
+dataset that actually links per-case freeze parameters to measured
+immune outcomes -- published cryo-immunotherapy studies give you
+trial-level response rates and mechanism descriptions, not the kind
+of per-case table you'd need to train on. Fabricating a training set
+or fitting to a handful of data points would just produce something
+that looks rigorous without being rigorous.
 
-The honest choice, and the one this module makes, is a transparent,
-literature-parameterized SCORING function: each factor's direction
-and rough relative weight is drawn from a specific cited mechanism or
-finding, combined into an interpretable composite score, with an
-explicit confidence/evidence-quality label attached to every output.
-This is a defensible research-prototype starting point and an honest
-one -- and closing the gap to a real trained model is exactly the
-kind of thing that requires exactly the kind of dataset a
-collaborating lab or clinical partner could plausibly provide. That
-makes it a legitimate, concrete ask for a potential advisor, not a
-weakness to hide.
+So this is a scoring function instead: every factor's direction and
+weight comes from a specific cited mechanism or finding, combined
+into one interpretable score, with an evidence-quality label attached
+to the output so it doesn't imply more certainty than it has. Turning
+this into an actual trained model later would need a real dataset
+linking specific protocols to measured immune markers -- gel-phantom
+or clinical trial data would do it.
 """
 
 from dataclasses import dataclass, field
@@ -43,7 +36,7 @@ class FreezeProtocol:
 class ImmuneEstimate:
     activation_score: float          # 0-100, composite, higher = more favorable
     contributing_factors: dict       # factor_name -> (raw_value, weighted_contribution, rationale)
-    evidence_quality: str            # honest label, not hidden
+    evidence_quality: str            # explicit evidence-basis label
     caveats: list
 
 
@@ -91,16 +84,14 @@ def _freeze_thaw_cycles_factor(n_cycles: int):
 
 
 def _ablation_fraction_factor(fraction: float):
-    """This one is genuinely contested in the literature and is
-    represented as such rather than picking a side: some evidence
-    favors near-complete ablation (more antigen, more damage signal);
-    other work on 'partial' or fractional cryoablation argues leaving
-    some residual tumor preserves an antigen depot that sustains
-    immune engagement rather than removing the antigen source
-    entirely. This function is intentionally NEUTRAL (flat) across
-    a broad mid-range and only penalizes the extremes (near-zero
-    ablation, or reads as a proxy for treating uncertainty honestly
-    rather than asserting a preference this codebase can't justify.
+    """This factor addresses a question that is genuinely contested in
+    the literature. Some evidence favors near-complete ablation (more
+    antigen, more damage signal); other work on partial or fractional
+    cryoablation argues that leaving some residual tumor preserves an
+    antigen depot that sustains immune engagement rather than removing
+    the antigen source entirely. The function is intentionally flat
+    across a broad mid-range, penalizing only the extremes, to avoid
+    asserting a preference the literature does not currently support.
     """
     if fraction < 0.3:
         score = fraction / 0.3 * 0.4
