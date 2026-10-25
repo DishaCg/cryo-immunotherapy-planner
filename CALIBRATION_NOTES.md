@@ -48,7 +48,9 @@ Two more things helped close the gap:
   vs. the 40mm benchmark, noticeably closer than the perfused in-vivo
   number (25.6mm).
 
-## Where it stands right now
+## Where it stands right now (SUPERSEDED - see the Oct 2026 addendum below)
+
+> The 40mm / 27mm benchmark and the "~24% / ~51% low" figures in this section came from a secondary source and are not in Boston Scientific's isotherm guide. Use the addendum.
 
 | | model (gel-phantom mode) | published | gap |
 |---|---|---|---|
@@ -64,3 +66,38 @@ properties I'm using are off for whatever tissue their bench test
 used. Actually pinning that down would need real gel-phantom or
 clinical ice-ball measurements to fit against, which I don't have
 access to right now.
+
+## Addendum (Oct 2026): benchmark protocol, grid convergence, and what the data say
+
+**Benchmark protocol.** Boston Scientific's isotherm guide (PI-814202-AB) states its
+isotherms were measured in 37C gel after two 10-minute freezes separated by a 5-minute
+passive thaw. My earlier comparison used a single 10-minute freeze.
+
+**Published values.** The guide's isotherm table is jumbled in the PDF text layer but its
+structure is consistent (each family lists 4, 3, 2, 1-needle panels in decreasing size).
+Read that way, the IceRod 1.5 single-needle side-view numbers are about
+width 34-36 / 25-26 / 16 mm and length 53-55 / 45 / 39-40 mm at 0 / -20 / -40C
+(tolerance +-3 mm width, +-4 mm length). **Confirmed** against Boston Scientific's CX Needle Isotherm Guide (PI-754604) and the Cryoablation Product Catalogue (PI-929802): IceRod 1.5 CX single needle 36x53 / 26x45 / 16x39 mm; IceRod 1.5 PLUS 25x45 / 16x40 mm at -20 / -40C. Independent gel data (Shah et al., Urology 91:234-240, 2016; manufacturer-funded): 17G single-needle ice ball 3.4-3.6 cm, -40C core ~1.8 cm. The 40/27 mm figures
+used earlier (Oncohema Key) are not in this guide; do not rely on the old "24% / 51% low".
+
+**Grid convergence (single 600 s freeze, gel, widths 0/-20/-40C; constant 0.8 mm probe radius):**
+dr=0.8: 29.5/19.3/12.3; dr=0.4: 31.2/21.1/13.8; dr=0.2: 32.0/21.8/14.5 mm.
+Roughly first-order; extrapolated limit ~32.5/22.4/15.1 mm. So dr=1.0 (the old default)
+under-predicts widths by ~6-13%; dr=0.4 by ~4-9%. Time step is converged (<1% from dt=4 to 0.5 s).
+The optimizer default is now dr=0.4 mm (pass dr_mm=1.0 for quick runs).
+
+**Benchmark protocol at dr=0.4 mm (gel, 17 mm active length, -140C):**
+widths 37.0 / 23.7 / 15.0 mm; lengths 42.4 / 30.6 / 24.2 mm.
+dr=0.2 mm: widths 37.9 / 24.6 / 15.8; lengths 43.3 / 31.4 / 24.8.
+=> widths agree with published within ~3-9% (0C slightly high, -20/-40C slightly low),
+but axial lengths are 21-40% too short: the model's ice ball is too round
+(length/width 1.15 vs ~1.5 published).
+
+**Active-length sensitivity (dr=1.0, benchmark protocol):** L=17: widths 36.9/23.4/14.7,
+lengths 42.9/30.8/24.5. L=30: widths 41.7/27.8/17.7, lengths 55.2/43.3/36.8.
+Longer active zones fix the lengths but overshoot the widths (0C by ~16-23%), so no single
+active length matches both. A uniform -140C line source is probably the wrong boundary
+condition for the aspect ratio; a probe model with finite cooling power / non-uniform tip
+temperature is the obvious next step.
+
+Solver assembly is vectorised; it matches the earlier loop version to ~1e-13 and is ~10-30x faster.

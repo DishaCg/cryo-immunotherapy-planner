@@ -50,6 +50,7 @@ def evaluate_protocol(
     probe_z_mm: float = 0.0,
     domain_r_mm: float = 35.0,
     domain_z_mm: float = 60.0,
+    dr_mm: float = 0.4,
 ) -> ProtocolEvaluation:
     """Run Module A for the geometric outcome and Module B for the
     immune-activation estimate on a single candidate protocol."""
@@ -62,15 +63,16 @@ def evaluate_protocol(
         record_every_s=protocol.freeze_time_s,
         domain_r_mm=domain_r_mm,
         domain_z_mm=domain_z_mm,
+        dr_mm=dr_mm,
     )
 
     if protocol.num_freeze_thaw_cycles >= 2:
         thawed = simulate([probe], freeze_time_s=300.0, dt_s=3.0, record_every_s=300.0,
-                           domain_r_mm=domain_r_mm, domain_z_mm=domain_z_mm,
+                           domain_r_mm=domain_r_mm, domain_z_mm=domain_z_mm, dr_mm=dr_mm,
                            initial_T=result.final_T, probe_active=False)
         result = simulate([probe], freeze_time_s=protocol.freeze_time_s, dt_s=3.0,
                            record_every_s=protocol.freeze_time_s,
-                           domain_r_mm=domain_r_mm, domain_z_mm=domain_z_mm,
+                           domain_r_mm=domain_r_mm, domain_z_mm=domain_z_mm, dr_mm=dr_mm,
                            initial_T=thawed.final_T)
 
     lethal_radius = result.lethal_radius_mm[-1]
@@ -116,6 +118,7 @@ def search_protocols(
     cycle_options: List[int] = (1, 2),
     checkpoint_options: List[bool] = (False, True),
     probe_temp_c: float = -140.0,
+    dr_mm: float = 0.4,
 ) -> List[ProtocolEvaluation]:
     """Grid search over a small, clinically meaningful protocol space
     and return every candidate annotated with whether it's on the
@@ -131,5 +134,5 @@ def search_protocols(
                     combined_with_checkpoint_inhibitor=combo,
                 ))
 
-    evals = [evaluate_protocol(c, tumor_radius_mm) for c in candidates]
+    evals = [evaluate_protocol(c, tumor_radius_mm, dr_mm=dr_mm) for c in candidates]
     return _pareto_front(evals)

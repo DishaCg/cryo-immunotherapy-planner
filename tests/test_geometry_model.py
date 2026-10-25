@@ -58,23 +58,31 @@ def test_order_of_magnitude_vs_clinical_benchmark():
     )
 
 
-def test_two_probes_produce_larger_combined_zone():
-    """Two probes placed close together should produce a larger fused
-    ablation zone than either probe alone -- a basic multi-probe
-    synergy sanity check."""
-    single = simulate([ProbeConfig(r_mm=0.0, z_mm=0.0)],
-                       freeze_time_s=300.0, dt_s=3.0, record_every_s=300.0,
-                       domain_r_mm=30, domain_z_mm=50)
+def test_gel_phantom_regression_pin():
+    """Regression pin (NOT a paper number): single 17G probe, -140C, perfusion off,
+    single 10 min freeze at the default 1.0 mm grid / 2 s step gives an ice-ball
+    diameter ~30.6 mm and -40C diameter ~13.2 mm. Guards against silent solver
+    changes. The paper's Sec. V-A uses the two-freeze benchmark at dr = 0.4 mm."""
+    gel = TissueProperties(perfusion_rate=0.0)
+    r = simulate([ProbeConfig(r_mm=0.0, z_mm=0.0)], tissue=gel, freeze_time_s=600.0,
+                 dt_s=2.0, record_every_s=600.0)
+    assert abs(2 * r.iceball_radius_mm[-1] - 30.6) < 0.3
+    assert abs(2 * r.lethal_radius_mm[-1] - 13.2) < 0.3
 
-    two_probes = [
-        ProbeConfig(r_mm=0.0, z_mm=0.0),
-        ProbeConfig(r_mm=12.0, z_mm=0.0),
-    ]
-    result = simulate(two_probes, freeze_time_s=300.0, dt_s=3.0,
-                       record_every_s=300.0, domain_r_mm=30, domain_z_mm=50)
-    # radius measured from the FIRST probe's axis should be at least as
-    # large with a second probe assisting nearby
-    assert result.iceball_radius_mm[-1] >= single.iceball_radius_mm[-1] - 1e-6
+
+def test_extra_isotherm_nesting():
+    """-20C isotherm must lie between the 0C and -40C isotherms."""
+    r = simulate([ProbeConfig(r_mm=0.0, z_mm=0.0)], freeze_time_s=300.0, dt_s=3.0,
+                 record_every_s=300.0, domain_r_mm=30, domain_z_mm=50,
+                 extra_isotherms=(-20.0,))
+    m20 = r.extra_radii[-20.0][-1]
+    assert r.lethal_radius_mm[-1] <= m20 <= r.iceball_radius_mm[-1]
+
+
+# NOTE: the earlier "two probes produce a larger zone" test was removed. The solver
+# is axisymmetric, so a probe at r > 0 is a RING source, not a second probe, and the
+# old test only asserted ">=" against the single-probe case. Multi-probe behaviour
+# needs a 3-D discretisation before it can be tested meaningfully.
 
 
 if __name__ == "__main__":
@@ -84,6 +92,8 @@ if __name__ == "__main__":
     print("PASS: test_lethal_radius_smaller_than_iceball")
     test_order_of_magnitude_vs_clinical_benchmark()
     print("PASS: test_order_of_magnitude_vs_clinical_benchmark")
-    test_two_probes_produce_larger_combined_zone()
-    print("PASS: test_two_probes_produce_larger_combined_zone")
+    test_gel_phantom_regression_pin()
+    print("PASS: test_gel_phantom_regression_pin")
+    test_extra_isotherm_nesting()
+    print("PASS: test_extra_isotherm_nesting")
     print("\nAll geometry model sanity tests passed.")

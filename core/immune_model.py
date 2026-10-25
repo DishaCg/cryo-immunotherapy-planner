@@ -54,9 +54,11 @@ def _cooling_rate_factor(rate_c_per_min: float):
     cryo-immunotherapy. Saturates beyond ~40 C/min (typical clinical
     cryoprobes already achieve very fast local cooling near the probe;
     additional speed has diminishing marginal effect).
-    Rationale source: cryoablation mechanism reviews (Frontiers in
-    Oncology 2026 cryo-immunotherapy review; general immunogenic cell
-    death literature).
+    Rationale sources: Yakkala et al. 2019 (Front. Immunol. 10:2283) for the
+    necrosis/immunogenic-death mechanism; Yakkala et al. 2021 (Front. Immunol.
+    12:695150) for fast freezing giving better survival and stronger CD4+/CD8+
+    responses than slow freezing in a mouse melanoma model. The 40 C/min
+    saturation point is a modeling assumption, not a measured value.
     """
     rate = abs(rate_c_per_min)
     score = min(rate / 40.0, 1.0)
